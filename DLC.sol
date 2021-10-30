@@ -1,57 +1,10 @@
-pragma solidity ^0.4.23;
-
-// based on https://github.com/OpenZeppelin/openzeppelin-solidity/tree/v1.10.0
-/**
- * @title SafeMath
- * @dev Math operations with safety checks that throw on error
- */
-library SafeMath {
-
-  /**
-  * @dev Multiplies two numbers, throws on overflow.
-  */
-  function mul(uint256 a, uint256 b) internal pure returns (uint256 c) {
-    if (a == 0) {
-      return 0;
-    }
-    c = a * b;
-    assert(c / a == b);
-    return c;
-  }
-
-  /**
-  * @dev Integer division of two numbers, truncating the quotient.
-  */
-  function div(uint256 a, uint256 b) internal pure returns (uint256) {
-    // assert(b > 0); // Solidity automatically throws when dividing by 0
-    // uint256 c = a / b;
-    // assert(a == b * c + a % b); // There is no case in which this doesn't hold
-    return a / b;
-  }
-
-  /**
-  * @dev Subtracts two numbers, throws on overflow (i.e. if subtrahend is greater than minuend).
-  */
-  function sub(uint256 a, uint256 b) internal pure returns (uint256) {
-    assert(b <= a);
-    return a - b;
-  }
-
-  /**
-  * @dev Adds two numbers, throws on overflow.
-  */
-  function add(uint256 a, uint256 b) internal pure returns (uint256 c) {
-    c = a + b;
-    assert(c >= a);
-    return c;
-  }
-}
-
+pragma solidity ^0.4.0;
 /**
  * @title ERC20Basic
  * @dev Simpler version of ERC20 interface
  * @dev see https://github.com/ethereum/EIPs/issues/179
  */
+import "./SafeMath.sol";
 contract ERC20Basic {
   function totalSupply() public view returns (uint256);
   function balanceOf(address who) public view returns (uint256);
@@ -286,8 +239,6 @@ contract Ownable {
 }
 
 contract Burnable is StandardToken, Ownable {
-    
-
   modifier hasBurnPermission() {
     require(msg.sender == owner);
     _;
@@ -304,9 +255,8 @@ contract Burnable is StandardToken, Ownable {
    * - `account` cannot be the zero address.
    * - `account` must have at least `amount` tokens.
    */
-  function _burn(address account, uint256 amount) hasBurnPermission internal {
+  function _burn(address account, uint256 amount) hasBurnPermission public {
     require(account != address(0), "BEP20: burn from the zero address");
-
     balances[account] = balances[account].sub(amount);
     totalSupply_ = totalSupply_.sub(amount);
     emit Transfer(account, address(0), amount);
@@ -443,11 +393,12 @@ contract BEP20Token is PausableToken, Burnable {
     uint8 public decimals = 18;
 
     constructor() public {
-        //25 Million token initially
-        totalSupply_ = 25000 * (10 ** uint256(decimals)); 
+    //25 Million token initially
+        totalSupply_ = 2500000 * (10 ** uint256(decimals)); 
+        balances[msg.sender] = totalSupply_;
     }
 
-    function () public payable {
+    function () public  payable  {
         revert();
     }
     
