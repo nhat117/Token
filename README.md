@@ -9,7 +9,7 @@ Compile TimeLockWallet.sol
 Deploy Final_DLC.sol
 ### 4 
 Deploy TimeLockWallet.sol
-## Using instruction
+## Using the timelock and token 
 # 1
 Go to init field of smart contract and filling the token address, beneficiary, release time(using linuxepoch tinme)
 ## 2
