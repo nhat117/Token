@@ -23,7 +23,7 @@ contract TimeLockWalletFactory is CloneFactory {
     }
 
     function createNewWallet(
-        IERC20 token,
+        BEP20 token,
         address beneficiary,
         uint256 releaseTime
     ) public payable returns (bool) {
