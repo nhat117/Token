@@ -1,8 +1,8 @@
-pragma solidity ^0.8.0;
+pragma solidity ^0.4.0;
 
 import "./TimeLockWallet.sol";
 import "./CloneFactory.sol";
-
+import "./DLC_Final.sol";
 contract TimeLockWalletFactory is CloneFactory {
     TimeLockWallet public newWallet;
 
@@ -23,7 +23,7 @@ contract TimeLockWalletFactory is CloneFactory {
     }
 
     function createNewWallet(
-        BEP20 token,
+        BEP20Token token,
         address beneficiary,
         uint256 releaseTime
     ) public payable returns (bool) {
