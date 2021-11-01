@@ -265,21 +265,6 @@ contract Burnable is StandardToken, Ownable {
     totalSupply_ = totalSupply_.sub(amount);
     emit Transfer(account, address(0), amount);
   }
- 
-//   function _calculateBurnAmount(uint256 amount) internal view returns (uint256) {
-//         uint256 burnAmount = 0;
-
-//         // burn amount calculations
-//         if (totalSupply_ > _minimumSupply) {
-//             burnAmount = amount.mul(3).div(100);
-//             uint256 availableBurn = totalSupply().sub(_minimumSupply);
-//             if (burnAmount > availableBurn) {
-//                 burnAmount = availableBurn;
-//             }
-//         }
-
-//         return burnAmount;
-//     }
 }
 
 /**
