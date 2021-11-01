@@ -5,8 +5,6 @@ pragma solidity ^0.4.0;
  * @dev see https://github.com/ethereum/EIPs/issues/179
  */
 import "./SafeMath.sol";
-//Bep 20 based on ERC20 
-//See: https://github.com/binance-chain/BEPs/blob/master/BEP20.md 
 contract ERC20Basic {
   function totalSupply() public view returns (uint256);
   function balanceOf(address who) public view returns (uint256);
@@ -83,8 +81,6 @@ contract ERC20 is ERC20Basic {
  * @dev https://github.com/ethereum/EIPs/issues/20
  * @dev Based on code by FirstBlood: https://github.com/Firstbloodio/token/blob/master/smart_contract/FirstBloodToken.sol
  */
- //Extend functionality of the ERC20 to based on BEP20 token
- //See: https://github.com/binance-chain/BEPs/blob/master/BEP20.md
 contract StandardToken is ERC20, BasicToken {
 
   mapping (address => mapping (address => uint256)) internal allowed;
@@ -240,6 +236,8 @@ contract Ownable {
     emit OwnershipTransferred(owner, newOwner);
     owner = newOwner;
   }
+
+
 }
 
 contract Burnable is StandardToken, Ownable {
@@ -265,6 +263,21 @@ contract Burnable is StandardToken, Ownable {
     totalSupply_ = totalSupply_.sub(amount);
     emit Transfer(account, address(0), amount);
   }
+ 
+//   function _calculateBurnAmount(uint256 amount) internal view returns (uint256) {
+//         uint256 burnAmount = 0;
+
+//         // burn amount calculations
+//         if (totalSupply_ > _minimumSupply) {
+//             burnAmount = amount.mul(3).div(100);
+//             uint256 availableBurn = totalSupply().sub(_minimumSupply);
+//             if (burnAmount > availableBurn) {
+//                 burnAmount = availableBurn;
+//             }
+//         }
+
+//         return burnAmount;
+//     }
 }
 
 /**
@@ -374,7 +387,7 @@ contract PausableToken is StandardToken, Pausable {
     return super.decreaseApproval(_spender, _subtractedValue);
   }
 }
-//Final Bep20 Token
+
 contract BEP20Token is PausableToken, Burnable {
     // public variables
     string public name = "DeliCoin Token";
