@@ -1,289 +1,82 @@
-pragma solidity ^0.4.0;
-/**
- * @title ERC20Basic
- * @dev Simpler version of ERC20 interface
- * @dev see https://github.com/ethereum/EIPs/issues/179
- */
+pragma solidity 0.5.16;
 import "./SafeMath.sol";
-contract ERC20Basic {
-  function totalSupply() public view returns (uint256);
-  function balanceOf(address who) public view returns (uint256);
-  function transfer(address to, uint256 value) public returns (bool);
-  event Transfer(address indexed from, address indexed to, uint256 value);
-}
-
+import "./IBEP20.sol";
 /**
- * @title Basic token
- * @dev Basic version of StandardToken, with no allowances.
- */
-contract BasicToken is ERC20Basic {
-  using SafeMath for uint256;
-
-  mapping(address => uint256) balances;
-
-  uint256 totalSupply_;
-  
-  /**
-  * @dev total number of tokens in existence
-  */
-  function totalSupply() public view returns (uint256) {
-    return totalSupply_;
-  }
-
-  /**
-  * @dev transfer token for a specified address
-  * @param _to The address to transfer to.
-  * @param _value The amount to be transferred.
-  */
-  function transfer(address _to, uint256 _value) public returns (bool) {
-    require(_to != address(0));
-    require(_value <= balances[msg.sender]);
-
-    balances[msg.sender] = balances[msg.sender].sub(_value);
-    balances[_to] = balances[_to].add(_value);
-    emit Transfer(msg.sender, _to, _value);
-    return true;
-  }
-
-  /**
-  * @dev Gets the balance of the specified address.
-  * @param _owner The address to query the the balance of.
-  * @return An uint256 representing the amount owned by the passed address.
-  */
-  function balanceOf(address _owner) public view returns (uint256) {
-    return balances[_owner];
-  }
-}
-
-/**
- * @title ERC20 interface
- * @dev see https://github.com/ethereum/EIPs/issues/20
- */
-contract ERC20 is ERC20Basic {
-  function allowance(address owner, address spender)
-    public view returns (uint256);
-
-  function transferFrom(address from, address to, uint256 value)
-    public returns (bool);
-
-  function approve(address spender, uint256 value) public returns (bool);
-  event Approval(
-    address indexed owner,
-    address indexed spender,
-    uint256 value
-  );
-}
-
-/**
- * @title Standard ERC20 token
+ * @dev Contract module which provides a basic access control mechanism, where
+ * there is an account (an owner) that can be granted exclusive access to
+ * specific functions.
  *
- * @dev Implementation of the basic standard token.
- * @dev https://github.com/ethereum/EIPs/issues/20
- * @dev Based on code by FirstBlood: https://github.com/Firstbloodio/token/blob/master/smart_contract/FirstBloodToken.sol
+ * By default, the owner account will be the one that deploys the contract. This
+ * can later be changed with {transferOwnership}.
+ *
+ * This module is used through inheritance. It will make available the modifier
+ * `onlyOwner`, which can be applied to your functions to restrict their use to
+ * the owner.
  */
-contract StandardToken is ERC20, BasicToken {
+contract Ownable is Context {
+  address private _owner;
 
-  mapping (address => mapping (address => uint256)) internal allowed;
+  event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
   /**
-   * @dev Transfer tokens from one address to another
-   * @param _from address The address which you want to send tokens from
-   * @param _to address The address which you want to transfer to
-   * @param _value uint256 the amount of tokens to be transferred
+   * @dev Initializes the contract setting the deployer as the initial owner.
    */
-  function transferFrom(
-    address _from,
-    address _to,
-    uint256 _value
-  )
-    public
-    returns (bool)
-  {
-    require(_to != address(0));
-    require(_value <= balances[_from]);
-    require(_value <= allowed[_from][msg.sender]);
-
-    balances[_from] = balances[_from].sub(_value);
-    balances[_to] = balances[_to].add(_value);
-    allowed[_from][msg.sender] = allowed[_from][msg.sender].sub(_value);
-    emit Transfer(_from, _to, _value);
-    return true;
+  constructor () internal {
+    address msgSender = _msgSender();
+    _owner = msgSender;
+    emit OwnershipTransferred(address(0), msgSender);
   }
 
   /**
-   * @dev Approve the passed address to spend the specified amount of tokens on behalf of msg.sender.
-   *
-   * Beware that changing an allowance with this method brings the risk that someone may use both the old
-   * and the new allowance by unfortunate transaction ordering. One possible solution to mitigate this
-   * race condition is to first reduce the spender's allowance to 0 and set the desired value afterwards:
-   * https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
-   * @param _spender The address which will spend the funds.
-   * @param _value The amount of tokens to be spent.
+   * @dev Returns the address of the current owner.
    */
-  function approve(address _spender, uint256 _value) public returns (bool) {
-    allowed[msg.sender][_spender] = _value;
-    emit Approval(msg.sender, _spender, _value);
-    return true;
-  }
-
-  /**
-   * @dev Function to check the amount of tokens that an owner allowed to a spender.
-   * @param _owner address The address which owns the funds.
-   * @param _spender address The address which will spend the funds.
-   * @return A uint256 specifying the amount of tokens still available for the spender.
-   */
-  function allowance(
-    address _owner,
-    address _spender
-   )
-    public
-    view
-    returns (uint256)
-  {
-    return allowed[_owner][_spender];
-  }
-
-  /**
-   * @dev Increase the amount of tokens that an owner allowed to a spender.
-   *
-   * approve should be called when allowed[_spender] == 0. To increment
-   * allowed value is better to use this function to avoid 2 calls (and wait until
-   * the first transaction is mined)
-   * From MonolithDAO Token.sol
-   * @param _spender The address which will spend the funds.
-   * @param _addedValue The amount of tokens to increase the allowance by.
-   */
-  function increaseApproval(
-    address _spender,
-    uint _addedValue
-  )
-    public
-    returns (bool)
-  {
-    allowed[msg.sender][_spender] = (
-      allowed[msg.sender][_spender].add(_addedValue));
-    emit Approval(msg.sender, _spender, allowed[msg.sender][_spender]);
-    return true;
-  }
-
-  /**
-   * @dev Decrease the amount of tokens that an owner allowed to a spender.
-   *
-   * approve should be called when allowed[_spender] == 0. To decrement
-   * allowed value is better to use this function to avoid 2 calls (and wait until
-   * the first transaction is mined)
-   * From MonolithDAO Token.sol
-   * @param _spender The address which will spend the funds.
-   * @param _subtractedValue The amount of tokens to decrease the allowance by.
-   */
-  function decreaseApproval(
-    address _spender,
-    uint _subtractedValue
-  )
-    public
-    returns (bool)
-  {
-    uint oldValue = allowed[msg.sender][_spender];
-    if (_subtractedValue > oldValue) {
-      allowed[msg.sender][_spender] = 0;
-    } else {
-      allowed[msg.sender][_spender] = oldValue.sub(_subtractedValue);
-    }
-    emit Approval(msg.sender, _spender, allowed[msg.sender][_spender]);
-    return true;
-  }
-
-}
-
-
-/**
- * @title Ownable
- * @dev The Ownable contract has an owner address, and provides basic authorization control
- * functions, this simplifies the implementation of "user permissions".
- */
-contract Ownable {
-  address public owner;
-
-  event OwnershipRenounced(address indexed previousOwner);
-  event OwnershipTransferred(
-    address indexed previousOwner,
-    address indexed newOwner
-  );
-
-
-  /**
-   * @dev The Ownable constructor sets the original `owner` of the contract to the sender
-   * account.
-   */
-  constructor() public {
-    owner = msg.sender;
+  function owner() public view returns (address) {
+    return _owner;
   }
 
   /**
    * @dev Throws if called by any account other than the owner.
    */
   modifier onlyOwner() {
-    require(msg.sender == owner);
+    require(_owner == _msgSender(), "Ownable: caller is not the owner");
     _;
   }
 
   /**
-   * @dev Allows the current owner to transfer control of the contract to a newOwner.
-   * @param newOwner The address to transfer ownership to.
+   * @dev Leaves the contract without owner. It will not be possible to call
+   * `onlyOwner` functions anymore. Can only be called by the current owner.
+   *
+   * NOTE: Renouncing ownership will leave the contract without an owner,
+   * thereby removing any functionality that is only available to the owner.
+   */
+  function renounceOwnership() public onlyOwner {
+    emit OwnershipTransferred(_owner, address(0));
+    _owner = address(0);
+  }
+
+  /**
+   * @dev Transfers ownership of the contract to a new account (`newOwner`).
+   * Can only be called by the current owner.
    */
   function transferOwnership(address newOwner) public onlyOwner {
-    require(newOwner != address(0));
-    emit OwnershipTransferred(owner, newOwner);
-    owner = newOwner;
+    _transferOwnership(newOwner);
   }
 
-
-}
-
-contract Burnable is StandardToken, Ownable {
-  modifier hasBurnPermission() {
-    require(msg.sender == owner);
-    _;
-  }
-    
-   /**
-   * @dev Destroys `amount` tokens from `account`, reducing the
-   * total supply.
-   *
-   * Emits a {Transfer} event with `to` set to the zero address.
-   *
-   * Requirements
-   *
-   * - `account` cannot be the zero address.
-   * - `account` must have at least `amount` tokens.
+  /**
+   * @dev Transfers ownership of the contract to a new account (`newOwner`).
    */
-  function _burn(address account, uint256 amount) hasBurnPermission public {
-    require(account != address(0), "BEP20: burn from the zero address");
-    balances[account] = balances[account].sub(amount);
-    totalSupply_ = totalSupply_.sub(amount);
-    emit Transfer(account, address(0), amount);
+  function _transferOwnership(address newOwner) internal {
+    require(newOwner != address(0), "Ownable: new owner is the zero address");
+    emit OwnershipTransferred(_owner, newOwner);
+    _owner = newOwner;
   }
- 
-//   function _calculateBurnAmount(uint256 amount) internal view returns (uint256) {
-//         uint256 burnAmount = 0;
-
-//         // burn amount calculations
-//         if (totalSupply_ > _minimumSupply) {
-//             burnAmount = amount.mul(3).div(100);
-//             uint256 availableBurn = totalSupply().sub(_minimumSupply);
-//             if (burnAmount > availableBurn) {
-//                 burnAmount = availableBurn;
-//             }
-//         }
-
-//         return burnAmount;
-//     }
 }
+
 
 /**
- * @title Pausable
- * @dev Base contract which allows children to implement an emergency stop mechanism.
- */
+ * @title Pausable token
+ * @dev StandardToken modified with pausable transfers.
+ **/
 contract Pausable is Ownable {
   event Pause();
   event Unpause();
@@ -324,84 +117,497 @@ contract Pausable is Ownable {
   }
 }
 
+contract BEP20Token is Context, IBEP20, Ownable, Pausable {
+  using SafeMath for uint256;
 
-/**
- * @title Pausable token
- * @dev StandardToken modified with pausable transfers.
- **/
-contract PausableToken is StandardToken, Pausable {
+  mapping (address => uint256) private _balances;
 
-  function transfer(
-    address _to,
-    uint256 _value
-  )
-    public
-    whenNotPaused
-    returns (bool)
-  {
-    return super.transfer(_to, _value);
+  mapping (address => mapping (address => uint256)) private _allowances;
+
+  uint256 private _totalSupply;
+  uint8 private _decimals;
+  string private _symbol;
+  string private _name;
+
+  constructor(string memory name, uint8 decimals, string memory symbol) public {
+    _name = name;
+    _symbol = symbol;
+    _decimals = decimals;
+    _totalSupply = 25000000 * (10 ** uint256(decimals)); 
+    _balances[msg.sender] = _totalSupply;
+
+    emit Transfer(address(0), msg.sender, _totalSupply);
   }
 
-  function transferFrom(
-    address _from,
-    address _to,
-    uint256 _value
-  )
-    public
-    whenNotPaused
-    returns (bool)
-  {
-    return super.transferFrom(_from, _to, _value);
+  /**
+   * @dev Returns the bep token owner.
+   */
+  function getOwner() external view returns (address) {
+    return owner();
   }
 
-  function approve(
-    address _spender,
-    uint256 _value
-  )
-    public
-    whenNotPaused
-    returns (bool)
-  {
-    return super.approve(_spender, _value);
+  /**
+   * @dev Returns the token decimals.
+   */
+  function decimals() external view returns (uint8) {
+    return _decimals;
   }
 
-  function increaseApproval(
-    address _spender,
-    uint _addedValue
-  )
-    public
-    whenNotPaused
-    returns (bool success)
-  {
-    return super.increaseApproval(_spender, _addedValue);
+  /**
+   * @dev Returns the token symbol.
+   */
+  function symbol() external view returns (string memory) {
+    return _symbol;
   }
 
-  function decreaseApproval(
-    address _spender,
-    uint _subtractedValue
-  )
-    public
-    whenNotPaused
-    returns (bool success)
-  {
-    return super.decreaseApproval(_spender, _subtractedValue);
+  /**
+  * @dev Returns the token name.
+  */
+  function name() external view returns (string memory) {
+    return _name;
   }
+
+  /**
+   * @dev See {BEP20-totalSupply}.
+   */
+  function totalSupply() public view returns (uint256) {
+    return _totalSupply;
+  }
+
+  /**
+   * @dev See {BEP20-balanceOf}.
+   */
+  function balanceOf(address account) public view returns (uint256) {
+    return _balances[account];
+  }
+
+  /**
+   * @dev See {BEP20-transfer}.
+   *
+   * Requirements:
+   *
+   * - `recipient` cannot be the zero address.
+   * - the caller must have a balance of at least `amount`.
+   */
+  function transfer(address recipient, uint256 amount) external returns (bool) {
+    _transfer(_msgSender(), recipient, amount);
+    return true;
+  }
+
+  /**
+   * @dev See {BEP20-allowance}.
+   */
+  function allowance(address owner, address spender) external view returns (uint256) {
+    return _allowances[owner][spender];
+  }
+
+  /**
+   * @dev See {BEP20-approve}.
+   *
+   * Requirements:
+   *
+   * - `spender` cannot be the zero address.
+   */
+  function approve(address spender, uint256 amount) external returns (bool) {
+    _approve(_msgSender(), spender, amount);
+    return true;
+  }
+
+  /**
+   * @dev See {BEP20-transferFrom}.
+   *
+   * Emits an {Approval} event indicating the updated allowance. This is not
+   * required by the EIP. See the note at the beginning of {BEP20};
+   *
+   * Requirements:
+   * - `sender` and `recipient` cannot be the zero address.
+   * - `sender` must have a balance of at least `amount`.
+   * - the caller must have allowance for `sender`'s tokens of at least
+   * `amount`.
+   */
+  function transferFrom(address sender, address recipient, uint256 amount) external returns (bool) {
+    _transfer(sender, recipient, amount);
+    _approve(sender, _msgSender(), _allowances[sender][_msgSender()].sub(amount, "BEP20: transfer amount exceeds allowance"));
+    return true;
+  }
+
+  /**
+   * @dev Atomically increases the allowance granted to `spender` by the caller.
+   *
+   * This is an alternative to {approve} that can be used as a mitigation for
+   * problems described in {BEP20-approve}.
+   *
+   * Emits an {Approval} event indicating the updated allowance.
+   *
+   * Requirements:
+   *
+   * - `spender` cannot be the zero address.
+   */
+  function increaseAllowance(address spender, uint256 addedValue) public returns (bool) {
+    _approve(_msgSender(), spender, _allowances[_msgSender()][spender].add(addedValue));
+    return true;
+  }
+
+  /**
+   * @dev Atomically decreases the allowance granted to `spender` by the caller.
+   *
+   * This is an alternative to {approve} that can be used as a mitigation for
+   * problems described in {BEP20-approve}.
+   *
+   * Emits an {Approval} event indicating the updated allowance.
+   *
+   * Requirements:
+   *
+   * - `spender` cannot be the zero address.
+   * - `spender` must have allowance for the caller of at least
+   * `subtractedValue`.
+   */
+  function decreaseAllowance(address spender, uint256 subtractedValue) public returns (bool) {
+    _approve(_msgSender(), spender, _allowances[_msgSender()][spender].sub(subtractedValue, "BEP20: decreased allowance below zero"));
+    return true;
+  }
+
+  /**
+   * @dev Moves tokens `amount` from `sender` to `recipient`.
+   *
+   * This is internal function is equivalent to {transfer}, and can be used to
+   * e.g. implement automatic token fees, slashing mechanisms, etc.
+   *
+   * Emits a {Transfer} event.
+   *
+   * Requirements:
+   *
+   * - `sender` cannot be the zero address.
+   * - `recipient` cannot be the zero address.
+   * - `sender` must have a balance of at least `amount`.
+   */
+  function _transfer(address sender, address recipient, uint256 amount) internal whenNotPaused {
+    require(sender != address(0), "BEP20: transfer from the zero address");
+    require(recipient != address(0), "BEP20: transfer to the zero address");
+
+    _balances[sender] = _balances[sender].sub(amount, "BEP20: transfer amount exceeds balance");
+    _balances[recipient] = _balances[recipient].add(amount);
+    emit Transfer(sender, recipient, amount);
+  }
+  
+  /**
+   * @dev Destroys `amount` tokens from `account`, reducing the
+   * total supply.
+   *
+   * Emits a {Transfer} event with `to` set to the zero address.
+   *
+   * Requirements
+   *
+   * - `account` cannot be the zero address.
+   * - `account` must have at least `amount` tokens.
+   */
+  function _burn(address account, uint256 amount) internal whenNotPaused {
+    require(account != address(0), "BEP20: burn from the zero address");
+
+    _balances[account] = _balances[account].sub(amount, "BEP20: burn amount exceeds balance");
+    _totalSupply = _totalSupply.sub(amount);
+    emit Transfer(account, address(0), amount);
+  }
+
+  /**
+   * @dev Sets `amount` as the allowance of `spender` over the `owner`s tokens.
+   *
+   * This is internal function is equivalent to `approve`, and can be used to
+   * e.g. set automatic allowances for certain subsystems, etc.
+   *
+   * Emits an {Approval} event.
+   *
+   * Requirements:
+   *
+   * - `owner` cannot be the zero address.
+   * - `spender` cannot be the zero address.
+   */
+   
+  function _approve(address owner, address spender, uint256 amount) internal {
+    require(owner != address(0), "BEP20: approve from the zero address");
+    require(spender != address(0), "BEP20: approve to the zero address");
+
+    _allowances[owner][spender] = amount;
+    emit Approval(owner, spender, amount);
+  }
+
+  /**
+   * @dev Destroys `amount` tokens from `account`.`amount` is then deducted
+   * from the caller's allowance.
+   *
+   * See {_burn} and {_approve}.
+   */
+  function _burnFrom(address account, uint256 amount) internal whenNotPaused {
+    _burn(account, amount);
+    _approve(account, _msgSender(), _allowances[account][_msgSender()].sub(amount, "BEP20: burn amount exceeds allowance"));
+  }
+  
+  
 }
 
-contract BEP20Token is PausableToken, Burnable {
-    // public variables
-    string public name = "DeliCoin Token";
-    string public symbol = "DLC";
-    uint8 public decimals = 18;
-
-    constructor() public {
-    //25 Million token initially
-        totalSupply_ = 2500000 * (10 ** uint256(decimals)); 
-        balances[msg.sender] = totalSupply_;
-    }
-
-    function () public  payable  {
-        revert();
+contract DLCTOKEN is BEP20Token {
+    //Initial participation project
+    struct LockItem {
+        uint256  releaseDate;
+        uint256  amount;
     }
     
+    struct Investor {
+        address _address;
+        uint256 amount;
+    }
+    
+    address private teamWallet= "";
+    address private marketingWallet = "";
+    Investor private publicSaleWallet = "";
+    Investor [] private partnerList;
+    mapping(address => uint256) public privateSale;
+    mapping (address => LockItem[]) public lockList;
+    
+    //TODO: Weekly Map 
+    Investor [] private privateSaleList; //List of privatesale participant
+    address [] private lockedAddressList; // list of addresses that have some fund currently or previously locked
+        
+    constructor() public BEP20Token("DLC",18,"DLCTOKEN") {
+        //Making constructor
+    }
+        /**
+     * @dev transfer to a given address a given amount and lock this fund until a given time
+     * used for sending fund to team members, partners, or for owner to lock service fund over time
+     * @return the bool true if success.
+     * @param _receiver The address to transfer to.
+     * @param _amount The amount to transfer.
+     * @param _releaseDate The date to release token.
+     */
+     
+    function addAddresstoPrivateSale(address _investor, uint256 _amount) public whenNotPaused {
+        require(msg.sender == owner());
+        //Add address to private sale array
+			Investor memory investor = Investor({_address: _investor, amount:_amount});
+			privateSaleList.push(investor);
+			_balances[msg.sender] = _balances[msg.sender].sub(amount, "BEP20: transfer amount exceeds balance");
+			
+    }
+    
+    function addAddresstoPartnerList(address _investor, uint256 _amount) public whenNotPaused {
+        require(msg.sender == owner());
+        //Add address to private sale array
+			Investor memory investor = Investor({_address: _investor, amount:_amount});
+			partnerList.push(investor);
+			_balances[msg.sender] = _balances[msg.sender].sub(amount, "BEP20: transfer amount exceeds balance");
+    }
+    
+    
+     
+     /**
+     * @dev transfer of token to another address.
+     * always require the sender has enough balance
+     * @return the bool true if success. 
+     * @param _receiver The address to transfer to.
+     * @param _amount The amount to be transferred.
+     */
+     
+	function transfer(address _receiver, uint256 _amount) public whenNotPaused returns (bool success) {
+	    require(_receiver != address(0)); 
+	    require(_amount <= getAvailableBalance(msg.sender));
+        return BEP20Token20.transfer(_receiver, _amount);
+	}
+	
+	/**
+     * @dev transfer of token on behalf of the owner to another address. 
+     * always require the owner has enough balance and the sender is allowed to transfer the given amount
+     * @return the bool true if success. 
+     * @param _from The address to transfer from.
+     * @param _receiver The address to transfer to.
+     * @param _amount The amount to be transferred.
+     */
+    function transferFrom(address _from, address _receiver, uint256 _amount) public whenNotPaused returns (bool) {
+        require(_from != address(0));
+        require(_receiver != address(0));
+        require(_amount <= allowance(_from, msg.sender));
+        require(_amount <= getAvailableBalance(_from));
+        return BEP20Token.transferFrom(_from, _receiver, _amount);
+    }
+
+	/**
+     * @dev transfer of token toPartner. 
+     */
+	function allocationPartner() public {
+	    require(msg.sender == owner());
+	    mapping (uint => uint) public quarterMap;
+	    quarterMap[1]=1632182400;//=Tue, 21 Sep 2021 00:00:00 GMT
+        quarterMap[2]=1639958400;//=Mon, 20 Dec 2021 00:00:00 GMT
+        quarterMap[3]=1647734400;//=Sun, 20 Mar 2022 00:00:00 GMT
+        quarterMap[4]=1655510400;//=Sat, 18 Jun 2022 00:00:00 GMT
+        quarterMap[5]=1663286400;//=Fri, 16 Sep 2022 00:00:00 GMT
+        quarterMap[6]=1671062400;//=Thu, 15 Dec 2022 00:00:00 GMT
+        quarterMap[7]=1678838400;//=Wed, 15 Mar 2023 00:00:00 GMT
+        quarterMap[8]=1686614400;//=Tue, 13 Jun 2023 00:00:00 GMT
+        quarterMap[9]=1694390400;//=Mon, 11 Sep 2023 00:00:00 GMT
+        quarterMap[10]=1702166400;//=Sun, 10 Dec 2023 00:00:00 GMT
+        
+        //Start team allocation
+        for(uint i = 1; i <= 10; i ++) {
+            for(uint j = 0; j < partnerList.length; j ++) {
+                uint 256 transferAmount = mul(partnerList[j].amount, 0.01);
+                partnerList[j].amount = partnerList.sub(transferAmount);
+                transferAndLock(partnerList[j]._address, transferAmount, quarterMap[i]);
+            }
+        }
+	}
+	/**
+     * @dev transfer token to team. 
+     * always require the owner has enough balance and the sender is allowed to transfer the given amount
+     */
+	
+	function allocationTeam() public {
+	    require(msg.sender == owner());
+	    mapping (uint => uint) public quarterMap;
+	    quarterMap[1]=1632182400;//=Tue, 21 Sep 2021 00:00:00 GMT
+        quarterMap[2]=1639958400;//=Mon, 20 Dec 2021 00:00:00 GMT
+        quarterMap[3]=1647734400;//=Sun, 20 Mar 2022 00:00:00 GMT
+        quarterMap[4]=1655510400;//=Sat, 18 Jun 2022 00:00:00 GMT
+        quarterMap[5]=1663286400;//=Fri, 16 Sep 2022 00:00:00 GMT
+        quarterMap[6]=1671062400;//=Thu, 15 Dec 2022 00:00:00 GMT
+        quarterMap[7]=1678838400;//=Wed, 15 Mar 2023 00:00:00 GMT
+        quarterMap[8]=1686614400;//=Tue, 13 Jun 2023 00:00:00 GMT
+        quarterMap[9]=1694390400;//=Mon, 11 Sep 2023 00:00:00 GMT
+        quarterMap[10]=1702166400;//=Sun, 10 Dec 2023 00:00:00 GMT
+        
+        //Start team allocation
+        for(uint i = 1; i <= 10; i ++) {
+            //Percentage
+            uint 256 transferAmount = mul(teamWallet.amount,0.01);
+            teamWallet.sub(transferAmount);
+            transferAndLock(teamWallet, transferAmount, quarterMap[i]);
+        }
+	}
+	
+		/**
+     * @dev transfer of token on behalf of the owner to another address. 
+     * always require the owner has enough balance and the sender is allowed to transfer the given amount
+     * @return the bool true if success. 
+     * @param _from The address to transfer from.
+     * @param _receiver The address to transfer to.
+     * @param _amount The amount to be transferred.
+     */
+     
+    function allocationPublicSale() public {
+        require(msg.sender == owner());
+	    mapping (uint => uint) public quarterMap;
+	    quarterMap[1]=1632182400;//=Tue, 21 Sep 2021 00:00:00 GMT
+        quarterMap[2]=1639958400;//=Mon, 20 Dec 2021 00:00:00 GMT
+        quarterMap[3]=1647734400;//=Sun, 20 Mar 2022 00:00:00 GMT
+        quarterMap[4]=1655510400;//=Sat, 18 Jun 2022 00:00:00 GMT
+        quarterMap[5]=1663286400;//=Fri, 16 Sep 2022 00:00:00 GMT
+        quarterMap[6]=1671062400;//=Thu, 15 Dec 2022 00:00:00 GMT
+        quarterMap[7]=1678838400;//=Wed, 15 Mar 2023 00:00:00 GMT
+        quarterMap[8]=1686614400;//=Tue, 13 Jun 2023 00:00:00 GMT
+        quarterMap[9]=1694390400;//=Mon, 11 Sep 2023 00:00:00 GMT
+        quarterMap[10]=1702166400;//=Sun, 10 Dec 2023 00:00:00 GMT
+        
+        //Start publicsale
+        for(uint i = 1; i <= 10; i ++) {
+            uint 256 transferAmount = mul(publicSaleWallet.amount,0.01);
+            publicSaleWallet.sub(transferAmount);
+            transferAndLock(publicSaleWallet, transferAmount, quarterMap[i]);
+        }
+	}
+	
+		/**
+     * @dev transfer of token on behalf of the owner to another address. 
+     * always require the owner has enough balance and the sender is allowed to transfer the given amount
+     * @return the bool true if success. 
+     * @param _from The address to transfer from.
+     * @param _receiver The address to transfer to.
+     * @param _amount The amount to be transferred.
+     */
+	
+	function allocationPrivateSale() internal {
+	    //Sample watter map
+	    require(msg.sender == owner());
+	    mapping (uint => uint) public quarterMap;
+	    quarterMap[1]=1632182400;//=Tue, 21 Sep 2021 00:00:00 GMT
+        quarterMap[2]=1639958400;//=Mon, 20 Dec 2021 00:00:00 GMT
+        quarterMap[3]=1647734400;//=Sun, 20 Mar 2022 00:00:00 GMT
+        quarterMap[4]=1655510400;//=Sat, 18 Jun 2022 00:00:00 GMT
+        quarterMap[5]=1663286400;//=Fri, 16 Sep 2022 00:00:00 GMT
+        quarterMap[6]=1671062400;//=Thu, 15 Dec 2022 00:00:00 GMT
+        quarterMap[7]=1678838400;//=Wed, 15 Mar 2023 00:00:00 GMT
+        quarterMap[8]=1686614400;//=Tue, 13 Jun 2023 00:00:00 GMT
+        quarterMap[9]=1694390400;//=Mon, 11 Sep 2023 00:00:00 GMT
+        quarterMap[10]=1702166400;//=Sun, 10 Dec 2023 00:00:00 GMT
+        
+        //Start privatesale
+        for(uint i = 1; i <= 10; i ++) {
+            for(uint j = 0; j < privateSaleList.length; j ++) {
+                uint 256 transferAmount = mul(privateSaleList[j].amount, 0.01);
+                privateSaleList[j].amount = privateSaleList.sub(transferAmount);
+                transferAndLock(privateSaleList[j]._address, transferAmount, quarterMap[i]);
+            }
+        }
+	}
+	
+	function transferAndLock(address _receiver, uint256 _amount, uint256 _releaseDate) public whenNotPaused returns (bool success) {
+	    //Require the transferAndLock for only few wallet address
+	    require(msg.sender == teamWallet || msg.sender == publicSaleWallet || msg.sender ==   marketingWallet || msg.sender == owner());
+        BEP20Token._transfer(msg.sender,_receiver,_amount);
+    	
+    	if (lockList[_receiver].length==0) lockedAddressList.push(_receiver);
+    	
+		
+    	LockItem memory item = LockItem({amount:_amount, releaseDate:_releaseDate});
+		lockList[_receiver].push(item);
+		
+		//Relase token every
+        return true;
+	}
+	
+
+	
+	
+    /**
+     * @return the total amount of locked funds of a given address.
+     * @param lockedAddress The address to check.
+     */
+	function getLockedAmount(address lockedAddress) public view returns(uint256 _amount) {
+	    uint256 lockedAmount =0;
+	    for(uint256 j = 0; j<lockList[lockedAddress].length; j++) {
+	        if(now < lockList[lockedAddress][j].releaseDate) {
+	            uint256 temp = lockList[lockedAddress][j].amount;
+	            lockedAmount += temp;
+	        }
+	    }
+	    return lockedAmount;
+	}
+	
+	/**
+     * @return the total amount of locked funds at the current time
+     */
+	function getLockedAmountTotal() public view returns(uint256 _amount) {
+	    uint256 sum =0;
+	    for(uint256 i = 0; i<lockedAddressList.length; i++) {
+	        uint256 lockedAmount = getLockedAmount(lockedAddressList[i]);
+    	    sum = sum.add(lockedAmount);
+	    }
+	    return sum;
+	}
+	
+	/**
+     * @return the total amount of locked funds of a given address.
+     * @param lockedAddress The address to check.
+     */
+	function getAvailableBalance(address lockedAddress) public view returns(uint256 _amount) {
+	    uint256 bal = BEP20Token.balanceOf(lockedAddress);
+	    uint256 locked = getLockedAmount(lockedAddress);
+	    return bal.sub(locked);
+	}
+	
+	/**
+	 * @return the total amount of circulating coins that are not locked at the current time
+	 * 
+	 */
+	function getCirculatingSupplyTotal() public view returns(uint256 _amount) {
+	    return BEP20Token.totalSupply().sub(getLockedAmountTotal());
+	}
 }
