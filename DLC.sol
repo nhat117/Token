@@ -133,7 +133,7 @@ contract BEP20Token is Context, IBEP20, Ownable, Pausable {
     _name = name;
     _symbol = symbol;
     _decimals = decimals;
-    _totalSupply = 25000000 * (10 ** uint256(decimals)); 
+    _totalSupply = 2500000000 * (10 ** uint256(decimals)); 
     _balances[msg.sender] = _totalSupply;
 
     emit Transfer(address(0), msg.sender, _totalSupply);
@@ -189,7 +189,7 @@ contract BEP20Token is Context, IBEP20, Ownable, Pausable {
    * - `recipient` cannot be the zero address.
    * - the caller must have a balance of at least `amount`.
    */
-  function transfer(address recipient, uint256 amount) external returns (bool) {
+  function transfer(address recipient, uint256 amount) public returns (bool) {
     _transfer(_msgSender(), recipient, amount);
     return true;
   }
@@ -197,7 +197,7 @@ contract BEP20Token is Context, IBEP20, Ownable, Pausable {
   /**
    * @dev See {BEP20-allowance}.
    */
-  function allowance(address owner, address spender) external view returns (uint256) {
+  function allowance(address owner, address spender) public view returns (uint256) {
     return _allowances[owner][spender];
   }
 
@@ -225,7 +225,7 @@ contract BEP20Token is Context, IBEP20, Ownable, Pausable {
    * - the caller must have allowance for `sender`'s tokens of at least
    * `amount`.
    */
-  function transferFrom(address sender, address recipient, uint256 amount) external returns (bool) {
+  function transferFrom(address sender, address recipient, uint256 amount) public returns (bool) {
     _transfer(sender, recipient, amount);
     _approve(sender, _msgSender(), _allowances[sender][_msgSender()].sub(amount, "BEP20: transfer amount exceeds allowance"));
     return true;
@@ -357,19 +357,22 @@ contract DLCTOKEN is BEP20Token {
         uint256 amount;
     }
     
+  
     address private teamWallet= "";
     address private marketingWallet = "";
     Investor private publicSaleWallet = "";
     Investor [] private partnerList;
     mapping(address => uint256) public privateSale;
     mapping (address => LockItem[]) public lockList;
-    
+    bool privateSaleFlag = false;
     //TODO: Weekly Map 
     Investor [] private privateSaleList; //List of privatesale participant
     address [] private lockedAddressList; // list of addresses that have some fund currently or previously locked
         
     constructor() public BEP20Token("DLC",18,"DLCTOKEN") {
         //Making constructor
+        allocationTeam(250000000 * (10 ** uint256(18)));
+        allocationMarketing(250000000 * (10 ** uint256(18)));
     }
         /**
      * @dev transfer to a given address a given amount and lock this fund until a given time
@@ -381,20 +384,18 @@ contract DLCTOKEN is BEP20Token {
      */
      
     function addAddresstoPrivateSale(address _investor, uint256 _amount) public whenNotPaused {
-        require(msg.sender == owner());
+        require(msg.sender == owner() && privateSaleFlag == false && BEP20Token.balanceOf(msg.sender) > _amount);
         //Add address to private sale array
 			Investor memory investor = Investor({_address: _investor, amount:_amount});
 			privateSaleList.push(investor);
-			_balances[msg.sender] = _balances[msg.sender].sub(amount, "BEP20: transfer amount exceeds balance");
 			
     }
     
     function addAddresstoPartnerList(address _investor, uint256 _amount) public whenNotPaused {
-        require(msg.sender == owner());
+        require(msg.sender == owner() && BEP20Token.balanceOf(msg.sender) > _amount);
         //Add address to private sale array
 			Investor memory investor = Investor({_address: _investor, amount:_amount});
 			partnerList.push(investor);
-			_balances[msg.sender] = _balances[msg.sender].sub(amount, "BEP20: transfer amount exceeds balance");
     }
     
     
@@ -410,7 +411,7 @@ contract DLCTOKEN is BEP20Token {
 	function transfer(address _receiver, uint256 _amount) public whenNotPaused returns (bool success) {
 	    require(_receiver != address(0)); 
 	    require(_amount <= getAvailableBalance(msg.sender));
-        return BEP20Token20.transfer(_receiver, _amount);
+        return BEP20Token.transfer(_receiver, _amount);
 	}
 	
 	/**
@@ -424,7 +425,7 @@ contract DLCTOKEN is BEP20Token {
     function transferFrom(address _from, address _receiver, uint256 _amount) public whenNotPaused returns (bool) {
         require(_from != address(0));
         require(_receiver != address(0));
-        require(_amount <= allowance(_from, msg.sender));
+        require(_amount <= BEP20Token.allowance(_from, msg.sender));
         require(_amount <= getAvailableBalance(_from));
         return BEP20Token.transferFrom(_from, _receiver, _amount);
     }
@@ -432,25 +433,19 @@ contract DLCTOKEN is BEP20Token {
 	/**
      * @dev transfer of token toPartner. 
      */
+    uint [] quarterMap; 
 	function allocationPartner() public {
 	    require(msg.sender == owner());
-	    mapping (uint => uint) public quarterMap;
-	    quarterMap[1]=1632182400;//=Tue, 21 Sep 2021 00:00:00 GMT
-        quarterMap[2]=1639958400;//=Mon, 20 Dec 2021 00:00:00 GMT
-        quarterMap[3]=1647734400;//=Sun, 20 Mar 2022 00:00:00 GMT
-        quarterMap[4]=1655510400;//=Sat, 18 Jun 2022 00:00:00 GMT
-        quarterMap[5]=1663286400;//=Fri, 16 Sep 2022 00:00:00 GMT
-        quarterMap[6]=1671062400;//=Thu, 15 Dec 2022 00:00:00 GMT
-        quarterMap[7]=1678838400;//=Wed, 15 Mar 2023 00:00:00 GMT
-        quarterMap[8]=1686614400;//=Tue, 13 Jun 2023 00:00:00 GMT
-        quarterMap[9]=1694390400;//=Mon, 11 Sep 2023 00:00:00 GMT
-        quarterMap[10]=1702166400;//=Sun, 10 Dec 2023 00:00:00 GMT
+	    
+	    quarterMap.push(1632182400);//=Tue, 21 Sep 2021 00:00:00 GMT
+        quarterMap.push(1639958400);//=Mon, 20 Dec 2021 00:00:00 GMT
+  
         
-        //Start team allocation
+        //Start Partner allocation
         for(uint i = 1; i <= 10; i ++) {
             for(uint j = 0; j < partnerList.length; j ++) {
-                uint 256 transferAmount = mul(partnerList[j].amount, 0.01);
-                partnerList[j].amount = partnerList.sub(transferAmount);
+                uint256 transferAmount = partnerList.amount.mul(amt);
+                partnerList[j].amount.sub(transferAmount);
                 transferAndLock(partnerList[j]._address, transferAmount, quarterMap[i]);
             }
         }
@@ -459,59 +454,35 @@ contract DLCTOKEN is BEP20Token {
      * @dev transfer token to team. 
      * always require the owner has enough balance and the sender is allowed to transfer the given amount
      */
-	
-	function allocationTeam() public {
+	uint[] quarterMap1;
+	function allocationTeam(uint256 amount) internal {
 	    require(msg.sender == owner());
-	    mapping (uint => uint) public quarterMap;
-	    quarterMap[1]=1632182400;//=Tue, 21 Sep 2021 00:00:00 GMT
-        quarterMap[2]=1639958400;//=Mon, 20 Dec 2021 00:00:00 GMT
-        quarterMap[3]=1647734400;//=Sun, 20 Mar 2022 00:00:00 GMT
-        quarterMap[4]=1655510400;//=Sat, 18 Jun 2022 00:00:00 GMT
-        quarterMap[5]=1663286400;//=Fri, 16 Sep 2022 00:00:00 GMT
-        quarterMap[6]=1671062400;//=Thu, 15 Dec 2022 00:00:00 GMT
-        quarterMap[7]=1678838400;//=Wed, 15 Mar 2023 00:00:00 GMT
-        quarterMap[8]=1686614400;//=Tue, 13 Jun 2023 00:00:00 GMT
-        quarterMap[9]=1694390400;//=Mon, 11 Sep 2023 00:00:00 GMT
-        quarterMap[10]=1702166400;//=Sun, 10 Dec 2023 00:00:00 GMT
+	    quarterMap1.push(1632182400);//=Tue, 21 Sep 2021 00:00:00 GMT
+        quarterMap1.push(1639958400);//=Mon, 20 Dec 2021 00:00:00 GMT
         
         //Start team allocation
         for(uint i = 1; i <= 10; i ++) {
             //Percentage
-            uint 256 transferAmount = mul(teamWallet.amount,0.01);
-            teamWallet.sub(transferAmount);
-            transferAndLock(teamWallet, transferAmount, quarterMap[i]);
+            uint256 transferAmount = amount.mul(0.01);
+            amount.sub(transferAmount);
+            transferAndLock(teamWallet, transferAmount, quarterMap1[i]);
         }
 	}
 	
-		/**
-     * @dev transfer of token on behalf of the owner to another address. 
-     * always require the owner has enough balance and the sender is allowed to transfer the given amount
-     * @return the bool true if success. 
-     * @param _from The address to transfer from.
-     * @param _receiver The address to transfer to.
-     * @param _amount The amount to be transferred.
+		function allocationMarketing(uint256 amount) internal {
+	    require(msg.sender == owner());
+            //Percentage
+            transfer(marketingWallet, amount);
+	}
+	
+	
+	/**
+     * @dev token public sale allication.
      */
      
-    function allocationPublicSale() public {
+    function allocationPublicSale(uint256 amount) public whenNotPaused {
         require(msg.sender == owner());
-	    mapping (uint => uint) public quarterMap;
-	    quarterMap[1]=1632182400;//=Tue, 21 Sep 2021 00:00:00 GMT
-        quarterMap[2]=1639958400;//=Mon, 20 Dec 2021 00:00:00 GMT
-        quarterMap[3]=1647734400;//=Sun, 20 Mar 2022 00:00:00 GMT
-        quarterMap[4]=1655510400;//=Sat, 18 Jun 2022 00:00:00 GMT
-        quarterMap[5]=1663286400;//=Fri, 16 Sep 2022 00:00:00 GMT
-        quarterMap[6]=1671062400;//=Thu, 15 Dec 2022 00:00:00 GMT
-        quarterMap[7]=1678838400;//=Wed, 15 Mar 2023 00:00:00 GMT
-        quarterMap[8]=1686614400;//=Tue, 13 Jun 2023 00:00:00 GMT
-        quarterMap[9]=1694390400;//=Mon, 11 Sep 2023 00:00:00 GMT
-        quarterMap[10]=1702166400;//=Sun, 10 Dec 2023 00:00:00 GMT
-        
-        //Start publicsale
-        for(uint i = 1; i <= 10; i ++) {
-            uint 256 transferAmount = mul(publicSaleWallet.amount,0.01);
-            publicSaleWallet.sub(transferAmount);
-            transferAndLock(publicSaleWallet, transferAmount, quarterMap[i]);
-        }
+        transfer(publicSaleWallet, amount);
 	}
 	
 		/**
@@ -522,30 +493,22 @@ contract DLCTOKEN is BEP20Token {
      * @param _receiver The address to transfer to.
      * @param _amount The amount to be transferred.
      */
-	
-	function allocationPrivateSale() internal {
+	uint[]  weekly;
+	function allocationPrivateSale() public whenNotPaused {
 	    //Sample watter map
 	    require(msg.sender == owner());
-	    mapping (uint => uint) public quarterMap;
-	    quarterMap[1]=1632182400;//=Tue, 21 Sep 2021 00:00:00 GMT
-        quarterMap[2]=1639958400;//=Mon, 20 Dec 2021 00:00:00 GMT
-        quarterMap[3]=1647734400;//=Sun, 20 Mar 2022 00:00:00 GMT
-        quarterMap[4]=1655510400;//=Sat, 18 Jun 2022 00:00:00 GMT
-        quarterMap[5]=1663286400;//=Fri, 16 Sep 2022 00:00:00 GMT
-        quarterMap[6]=1671062400;//=Thu, 15 Dec 2022 00:00:00 GMT
-        quarterMap[7]=1678838400;//=Wed, 15 Mar 2023 00:00:00 GMT
-        quarterMap[8]=1686614400;//=Tue, 13 Jun 2023 00:00:00 GMT
-        quarterMap[9]=1694390400;//=Mon, 11 Sep 2023 00:00:00 GMT
-        quarterMap[10]=1702166400;//=Sun, 10 Dec 2023 00:00:00 GMT
+	    weekly.push(1632182400);//=Tue, 21 Sep 2021 00:00:00 GMT
+        weekly.push(1639958400);//=Mon, 20 Dec 2021 00:00:00 GMT
         
         //Start privatesale
         for(uint i = 1; i <= 10; i ++) {
             for(uint j = 0; j < privateSaleList.length; j ++) {
-                uint 256 transferAmount = mul(privateSaleList[j].amount, 0.01);
+                uint256 transferAmount = privateSaleList[j].amount.mul(0.01);
                 privateSaleList[j].amount = privateSaleList.sub(transferAmount);
-                transferAndLock(privateSaleList[j]._address, transferAmount, quarterMap[i]);
+                transferAndLock(privateSaleList[j]._address, transferAmount, weekly[i]);
             }
         }
+        privateSaleFlag = true;
 	}
 	
 	function transferAndLock(address _receiver, uint256 _amount, uint256 _releaseDate) public whenNotPaused returns (bool success) {
