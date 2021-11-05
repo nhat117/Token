@@ -129,11 +129,11 @@ contract BEP20Token is Context, IBEP20, Ownable, Pausable {
   string private _symbol;
   string private _name;
 
-  constructor(string memory name, uint8 decimals, string memory symbol) public {
+  constructor(string memory name,string memory symbol) public {
     _name = name;
     _symbol = symbol;
-    _decimals = decimals;
-    _totalSupply = 2500000000 * (10 ** uint256(decimals)); 
+    _decimals = 18;
+    _totalSupply = 250000000 * (10 ** uint256(_decimals)) ;
     _balances[msg.sender] = _totalSupply;
 
     emit Transfer(address(0), msg.sender, _totalSupply);
@@ -267,6 +267,7 @@ contract BEP20Token is Context, IBEP20, Ownable, Pausable {
     return true;
   }
 
+
   /**
    * @dev Moves tokens `amount` from `sender` to `recipient`.
    *
@@ -281,7 +282,7 @@ contract BEP20Token is Context, IBEP20, Ownable, Pausable {
    * - `recipient` cannot be the zero address.
    * - `sender` must have a balance of at least `amount`.
    */
-  function _transfer(address sender, address recipient, uint256 amount) internal whenNotPaused {
+  function _transfer(address sender, address recipient, uint256 amount) internal {
     require(sender != address(0), "BEP20: transfer from the zero address");
     require(recipient != address(0), "BEP20: transfer to the zero address");
 
@@ -289,7 +290,7 @@ contract BEP20Token is Context, IBEP20, Ownable, Pausable {
     _balances[recipient] = _balances[recipient].add(amount);
     emit Transfer(sender, recipient, amount);
   }
-  
+
   /**
    * @dev Destroys `amount` tokens from `account`, reducing the
    * total supply.
@@ -301,7 +302,7 @@ contract BEP20Token is Context, IBEP20, Ownable, Pausable {
    * - `account` cannot be the zero address.
    * - `account` must have at least `amount` tokens.
    */
-  function _burn(address account, uint256 amount) internal whenNotPaused {
+  function _burn(address account, uint256 amount) internal {
     require(account != address(0), "BEP20: burn from the zero address");
 
     _balances[account] = _balances[account].sub(amount, "BEP20: burn amount exceeds balance");
@@ -322,7 +323,6 @@ contract BEP20Token is Context, IBEP20, Ownable, Pausable {
    * - `owner` cannot be the zero address.
    * - `spender` cannot be the zero address.
    */
-   
   function _approve(address owner, address spender, uint256 amount) internal {
     require(owner != address(0), "BEP20: approve from the zero address");
     require(spender != address(0), "BEP20: approve to the zero address");
@@ -337,15 +337,13 @@ contract BEP20Token is Context, IBEP20, Ownable, Pausable {
    *
    * See {_burn} and {_approve}.
    */
-  function _burnFrom(address account, uint256 amount) internal whenNotPaused {
+  function _burnFrom(address account, uint256 amount) internal {
     _burn(account, amount);
     _approve(account, _msgSender(), _allowances[account][_msgSender()].sub(amount, "BEP20: burn amount exceeds allowance"));
   }
-  
-  
 }
 
-contract DLCTOKEN is BEP20Token {
+contract DLCTOKEN is BEP20Token{
     //Initial participation project
     struct LockItem {
         uint256  releaseDate;
@@ -357,10 +355,12 @@ contract DLCTOKEN is BEP20Token {
         uint256 amount;
     }
     
-  
-    address private teamWallet= "";
-    address private marketingWallet = "";
-    address private publicSaleWallet = "";
+    /**
+     * @dev add address of fund receiver for the initial fund allocation 
+    */
+    address private teamWallet= 0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2;
+    address private marketingWallet = 0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2;
+    address private publicSaleWallet = 0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2;
    
     mapping(address => uint256) public privateSale;
     mapping (address => LockItem[]) public lockList;
@@ -370,10 +370,10 @@ contract DLCTOKEN is BEP20Token {
     Investor [] private privateSaleList; //List of privatesale participant
     address [] private lockedAddressList; // list of addresses that have some fund currently or previously locked
         
-    constructor() public BEP20Token("DLC",18,"DLCTOKEN") {
+    constructor() public payable BEP20Token("DLC","DLCTOKEN") {
         //Making constructor
-        allocationTeam(250000000 * (10 ** uint256(18)));
-        allocationMarketing(250000000 * (10 ** uint256(18)));
+        // allocationTeam(250000000 * (10 ** uint256(18)));
+        // allocationMarketing(250000000 * (10 ** uint256(18)));
     }
     /**
      * @dev add address and investment amount to private sale
@@ -386,8 +386,8 @@ contract DLCTOKEN is BEP20Token {
     function addAddresstoPrivateSale(address _investor, uint256 _amount) public whenNotPaused {
         require(msg.sender == owner() && privateSaleFlag == false && BEP20Token.balanceOf(msg.sender) > _amount);
         //Add address to private sale array
-			Investor memory investor = Investor({_address: _investor, amount:_amount});
-			privateSaleList.push(investor);
+		Investor memory investor = Investor({_address: _investor, amount:_amount});
+		privateSaleList.push(investor);
 			
     }
     
@@ -406,20 +406,6 @@ contract DLCTOKEN is BEP20Token {
     }
     
     
-     
-     /**
-     * @dev transfer of token to another address.
-     * always require the sender has enough balance
-     * @return the bool true if success. 
-     * @param _receiver The address to transfer to.
-     * @param _amount The amount to be transferred.
-     */
-     
-	function transfer(address _receiver, uint256 _amount) public whenNotPaused returns (bool success) {
-	    require(_receiver != address(0)); 
-	    require(_amount <= getAvailableBalance(msg.sender));
-        return BEP20Token.transfer(_receiver, _amount);
-	}
 	
 	/**
      * @dev transfer of token on behalf of the owner to another address. 
@@ -449,7 +435,7 @@ contract DLCTOKEN is BEP20Token {
   
         
         //Start Partner allocation
-        for(uint i = 1; i <= 10; i ++) {
+        for(uint i = 0; i <quarterMap.length; i ++) {
             for(uint j = 0; j < partnerList.length; j ++) {
                 uint256 transferAmount = partnerList[j].amount.mul(1* (10 ** uint256(17)));
                 partnerList[j].amount.sub(transferAmount);
@@ -468,7 +454,7 @@ contract DLCTOKEN is BEP20Token {
         quarterMap1.push(1639958400);//=Mon, 20 Dec 2021 00:00:00 GMT
         
         //Start team allocation
-        for(uint i = 1; i <= 10; i ++) {
+        for(uint i = 0; i <quarterMap1.length; i ++) {
             //Percentage
             uint256 transferAmount = amount.mul(1* (10 ** uint256(17)));
             amount.sub(transferAmount);
@@ -524,7 +510,6 @@ contract DLCTOKEN is BEP20Token {
         BEP20Token._transfer(msg.sender,_receiver,_amount);
     	
     	if (lockList[_receiver].length==0) lockedAddressList.push(_receiver);
-    	
 		
     	LockItem memory item = LockItem({amount:_amount, releaseDate:_releaseDate});
 		lockList[_receiver].push(item);
