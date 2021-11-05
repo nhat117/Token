@@ -23,9 +23,9 @@ contract DLCTOKEN is BEP20Token{
     /**
      * @dev add address of fund receiver for the initial fund allocation 
     */
-    address private teamWallet= 0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2;
-    address private marketingWallet = 0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2;
-    address private publicSaleWallet = 0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2;
+    address private teamWallet= 0xB1C594206145e3401e4005A69114134c2E2a3fB3;
+    address private marketingWallet = 0x4fcD01Edf05b1EBD8f66638f6C9d0312Df8af4ce;
+    address private publicSaleWallet = 0x6ecaCced313Bc500aBE6E1ec34BE23888a8E777A;
    
     mapping(address => uint256) public privateSale;
     mapping (address => LockItem[]) public lockList;
@@ -94,14 +94,14 @@ contract DLCTOKEN is BEP20Token{
 	function allocationPartner() public {
 	    require(msg.sender == owner());
 	    
-	    quarterMap.push(1632182400);//=Tue, 21 Sep 2021 00:00:00 GMT
-        quarterMap.push(1639958400);//=Mon, 20 Dec 2021 00:00:00 GMT
+	    quarterMap.push(1636122900);//=Tue, 21 Sep 2021 00:00:00 GMT
+        quarterMap.push(1636123200);//=Mon, 20 Dec 2021 00:00:00 GMT
   
         
         //Start Partner allocation
         for(uint i = 0; i <quarterMap.length; i ++) {
             for(uint j = 0; j < partnerList.length; j ++) {
-                uint256 transferAmount = partnerList[j].amount.mul(1* (10 ** uint256(17)));
+                uint256 transferAmount = partnerList[j].amount.mul(5* (10 ** uint256(17)));
                 partnerList[j].amount.sub(transferAmount);
                 transferAndLock(partnerList[j]._address, transferAmount, quarterMap[i]);
             }
@@ -114,19 +114,19 @@ contract DLCTOKEN is BEP20Token{
 	uint[] quarterMap1;
 	function allocationTeam(uint256 amount) internal {
 	    require(msg.sender == owner());
-	    quarterMap1.push(1632182400);//=Tue, 21 Sep 2021 00:00:00 GMT
-        quarterMap1.push(1639958400);//=Mon, 20 Dec 2021 00:00:00 GMT
+	    quarterMap1.push(1636122300);//=Tue, 21 Sep 2021 00:00:00 GMT
+        quarterMap1.push(1636122600);//=Mon, 20 Dec 2021 00:00:00 GMT
         
         //Start team allocation
         for(uint i = 0; i <quarterMap1.length; i ++) {
             //Percentage
-            uint256 transferAmount = amount.mul(1* (10 ** uint256(17)));
+            uint256 transferAmount = amount.mul(5* (10 ** uint256(17)));
             amount.sub(transferAmount);
             transferAndLock(teamWallet, transferAmount, quarterMap1[i]);
         }
 	}
 	
-		function allocationMarketing(uint256 amount) internal {
+		function allocationMarketing(uint256 amount) public {
 	    require(msg.sender == owner());
             //Percentage
             transfer(marketingWallet, amount);
@@ -137,12 +137,22 @@ contract DLCTOKEN is BEP20Token{
      * @dev token public sale allication.
      */
      
+    uint[]  weeklyPublic;
     function allocationPublicSale(uint256 amount) public whenNotPaused {
         require(msg.sender == owner());
-        transfer(publicSaleWallet, amount);
+        weeklyPublic.push(1636120800);//=Tue, 21 Sep 2021 00:00:00 GMT
+        weeklyPublic.push(1636121100);//=Mon, 20 Dec 2021 00:00:00 GMT
+        weeklyPublic.push(1636121400);
+        //Start privatesale
+        
+        for(uint i = 0; i < weeklyPublic.length; i ++) {
+            uint256 transferAmount = amount.mul(3* (10 ** uint256(17)));
+            amount = amount.sub(transferAmount);
+            transferAndLock(publicSaleWallet, transferAmount, weeklyPublic[i]);
+        }
 	}
 	
-		/**
+	/**
      * @dev transfer of token on behalf of the owner to another address. 
      * always require the owner has enough balance and the sender is allowed to transfer the given amount
      * @return the bool true if success. 
@@ -154,13 +164,12 @@ contract DLCTOKEN is BEP20Token{
 	function allocationPrivateSale() public whenNotPaused {
 	    //Sample watter map
 	    require(msg.sender == owner());
-	    weekly.push(1632182400);//=Tue, 21 Sep 2021 00:00:00 GMT
-        weekly.push(1639958400);//=Mon, 20 Dec 2021 00:00:00 GMT
-        
+	    weekly.push(1636121700);//=Tue, 21 Sep 2021 00:00:00 GMT
+        weekly.push(1636122000);//=Mon, 20 Dec 2021 00:00:00 GMT
         //Start privatesale
-        for(uint i = 1; i <= 10; i ++) {
+        for(uint i = 0; i <weekly.length; i ++) {
             for(uint j = 0; j < privateSaleList.length; j ++) {
-                uint256 transferAmount = privateSaleList[j].amount.mul(1* (10 ** uint256(17)));
+                uint256 transferAmount = privateSaleList[j].amount.mul(5* (10 ** uint256(17)));
                 privateSaleList[j].amount = privateSaleList[j].amount.sub(transferAmount);
                 transferAndLock(privateSaleList[j]._address, transferAmount, weekly[i]);
             }
