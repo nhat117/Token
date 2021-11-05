@@ -1,6 +1,7 @@
 # Token
 This is a DLC Token and Timelock Contract source code
 ## Installation Instruction
+Download all of the file in this repository and extract them
 ### 1
 Compile Final_DLC.sol 
 ### 2
@@ -9,6 +10,7 @@ Compile TimeLockWallet.sol
 Deploy Final_DLC.sol
 ### 4 
 Deploy TimeLockWallet.sol
+
 ## Using the timelock and token 
 # 1
 Go to init field of smart contract and filling the token address, beneficiary, release time(using linuxepoch tinme)
