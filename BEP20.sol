@@ -189,7 +189,7 @@ contract BEP20Token is Context, IBEP20, Ownable, Pausable {
    * - `recipient` cannot be the zero address.
    * - the caller must have a balance of at least `amount`.
    */
-  function transfer(address recipient, uint256 amount) public returns (bool) {
+  function transfer(address recipient, uint256 amount) public whenPaused returns (bool) {
     _transfer(_msgSender(), recipient, amount);
     return true;
   }
@@ -282,7 +282,7 @@ contract BEP20Token is Context, IBEP20, Ownable, Pausable {
    * - `recipient` cannot be the zero address.
    * - `sender` must have a balance of at least `amount`.
    */
-  function _transfer(address sender, address recipient, uint256 amount) internal {
+  function _transfer(address sender, address recipient, uint256 amount) internal  {
     require(sender != address(0), "BEP20: transfer from the zero address");
     require(recipient != address(0), "BEP20: transfer to the zero address");
 
