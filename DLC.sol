@@ -360,12 +360,13 @@ contract DLCTOKEN is BEP20Token {
   
     address private teamWallet= "";
     address private marketingWallet = "";
-    Investor private publicSaleWallet = "";
-    Investor [] private partnerList;
+    address private publicSaleWallet = "";
+   
     mapping(address => uint256) public privateSale;
     mapping (address => LockItem[]) public lockList;
     bool privateSaleFlag = false;
     //TODO: Weekly Map 
+    Investor[] private partnerList;
     Investor [] private privateSaleList; //List of privatesale participant
     address [] private lockedAddressList; // list of addresses that have some fund currently or previously locked
         
@@ -374,13 +375,12 @@ contract DLCTOKEN is BEP20Token {
         allocationTeam(250000000 * (10 ** uint256(18)));
         allocationMarketing(250000000 * (10 ** uint256(18)));
     }
-        /**
-     * @dev transfer to a given address a given amount and lock this fund until a given time
-     * used for sending fund to team members, partners, or for owner to lock service fund over time
-     * @return the bool true if success.
-     * @param _receiver The address to transfer to.
+    /**
+     * @dev add address and investment amount to private sale
+     * used for adding Investor address to privateSale;
+     * require the action start befor start privatesale
+     * @param _investor to input address of investor contract or wallet
      * @param _amount The amount to transfer.
-     * @param _releaseDate The date to release token.
      */
      
     function addAddresstoPrivateSale(address _investor, uint256 _amount) public whenNotPaused {
@@ -391,6 +391,13 @@ contract DLCTOKEN is BEP20Token {
 			
     }
     
+    /**
+     * @dev add address and investment amount to partnerList sale
+     * used for adding Investor address to privateSale;
+     * require the action start befor start privatesale
+     * @param _investor to input address of investor contract or wallet
+     * @param _amount The amount to transfer.
+     */
     function addAddresstoPartnerList(address _investor, uint256 _amount) public whenNotPaused {
         require(msg.sender == owner() && BEP20Token.balanceOf(msg.sender) > _amount);
         //Add address to private sale array
@@ -444,7 +451,7 @@ contract DLCTOKEN is BEP20Token {
         //Start Partner allocation
         for(uint i = 1; i <= 10; i ++) {
             for(uint j = 0; j < partnerList.length; j ++) {
-                uint256 transferAmount = partnerList.amount.mul(amt);
+                uint256 transferAmount = partnerList[j].amount.mul(1* (10 ** uint256(17)));
                 partnerList[j].amount.sub(transferAmount);
                 transferAndLock(partnerList[j]._address, transferAmount, quarterMap[i]);
             }
@@ -463,7 +470,7 @@ contract DLCTOKEN is BEP20Token {
         //Start team allocation
         for(uint i = 1; i <= 10; i ++) {
             //Percentage
-            uint256 transferAmount = amount.mul(0.01);
+            uint256 transferAmount = amount.mul(1* (10 ** uint256(17)));
             amount.sub(transferAmount);
             transferAndLock(teamWallet, transferAmount, quarterMap1[i]);
         }
@@ -503,8 +510,8 @@ contract DLCTOKEN is BEP20Token {
         //Start privatesale
         for(uint i = 1; i <= 10; i ++) {
             for(uint j = 0; j < privateSaleList.length; j ++) {
-                uint256 transferAmount = privateSaleList[j].amount.mul(0.01);
-                privateSaleList[j].amount = privateSaleList.sub(transferAmount);
+                uint256 transferAmount = privateSaleList[j].amount.mul(1* (10 ** uint256(17)));
+                privateSaleList[j].amount = privateSaleList[j].amount.sub(transferAmount);
                 transferAndLock(privateSaleList[j]._address, transferAmount, weekly[i]);
             }
         }
