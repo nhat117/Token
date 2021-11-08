@@ -8,7 +8,8 @@ import "./BEP20.sol";
  * This contract is base on the Implementation of BEP20Token
  * src: https://github.com/binance-chain/BEPs/blob/master/BEP20.md
  */
-
+ 
+//TODO: Impelement using SafeMath
 contract DLCTOKEN is BEP20Token{
     //Initial participation project
     struct LockItem {
@@ -31,7 +32,7 @@ contract DLCTOKEN is BEP20Token{
    
     mapping(address => uint256) public privateSale;
     mapping (address => LockItem[]) public lockList;
-    bool privateSaleFlag = false;
+   
     //TODO: Weekly Map 
     Investor[] private partnerList;
     Investor[] private privateSaleList; //List of privatesale participant
@@ -48,72 +49,72 @@ contract DLCTOKEN is BEP20Token{
     BEP20Token.mint(100000000000000000000000000);
     //Add address of private sale Investor
         //Investor 1
-		privateSaleList.push(Investor({_address: 0x5B38Da6a701c568545dCfcB03FcB875f56beddC4, amount:1000}));
+	privateSaleList.push(Investor({_address: 0x5B38Da6a701c568545dCfcB03FcB875f56beddC4, amount:1000}));
 		//Investor 2
-		privateSaleList.push(Investor({_address: 0x5B38Da6a701c568545dCfcB03FcB875f56beddC4, amount:10000}));
+	privateSaleList.push(Investor({_address: 0x5B38Da6a701c568545dCfcB03FcB875f56beddC4, amount:10000}));
 		
     //Add address of partnerList
         //Partner 1
-        partnerList.push(Investor({_address: 0x5B38Da6a701c568545dCfcB03FcB875f56beddC4, amount:10000}));
+    partnerList.push(Investor({_address: 0x5B38Da6a701c568545dCfcB03FcB875f56beddC4, amount:10000}));
         //Partner 2
-        partnerList.push(Investor({_address: 0x5B38Da6a701c568545dCfcB03FcB875f56beddC4, amount:1000000}));
+    partnerList.push(Investor({_address: 0x5B38Da6a701c568545dCfcB03FcB875f56beddC4, amount:1000000}));
     
     
     //Timeline for private sale
-    	quarterMapPrivate[1] = 1636346513;//=Tue, 21 Sep 2021 00:00:00 GMT
-        quarterMapPrivate[2] = 1636346513;//=Mon, 20 Dec 2021 00:00:00 GMT
+    quarterMapPrivate[1] = 1636346513;//=Tue, 21 Sep 2021 00:00:00 GMT
+    quarterMapPrivate[2] = 1636346513;//=Mon, 20 Dec 2021 00:00:00 GMT
         //Start privatesale
-        for(uint i = 1; i <3; i ++) {
-            for(uint j = 0; j < privateSaleList.length; j ++) {
-                uint256 transferAmount =privateSaleList[j].amount * 50 / 100;
-                partnerList[j].amount -= transferAmount;
-                transferAndLock(privateSaleList[j]._address, transferAmount, quarterMapPrivate[i]);
-            }
+    for(uint i = 1; i <3; i ++) {
+        for(uint j = 0; j < privateSaleList.length; j ++) {
+            uint256 transferAmount =privateSaleList[j].amount * 50 / 100;
+            partnerList[j].amount -= transferAmount;
+            transferAndLock(privateSaleList[j]._address, transferAmount, quarterMapPrivate[i]);
         }
+    }
     
     //Timeline for Partner allocation
     	    
-	    quarterMapPartner[1] = 1636122900;//=Tue, 21 Sep 2021 00:00:00 GMT
-        quarterMapPartner[2] = 1636123200;//=Mon, 20 Dec 2021 00:00:00 GMT
+	quarterMapPartner[1] = 1636122900;//=Tue, 21 Sep 2021 00:00:00 GMT
+    quarterMapPartner[2] = 1636123200;//=Mon, 20 Dec 2021 00:00:00 GMT
   
         
         //Start Partner allocation
-        for(uint i = 1; i <3; i ++) {
-            for(uint j = 0; j < partnerList.length; j ++) {
-                 uint256 transferAmount = partnerList[j].amount * 50 /100;
-                 partnerList[j].amount -= transferAmount;
-                 transferAndLock(partnerList[j]._address, transferAmount, quarterMapPartner[i]);
-             }
+    for(uint i = 1; i <3; i ++) {
+        for(uint j = 0; j < partnerList.length; j ++) {
+            int256 transferAmount = partnerList[j].amount * 50 /100;
+            partnerList[j].amount -= transferAmount;
+            transferAndLock(partnerList[j]._address, transferAmount, quarterMapPartner[i]);
         }
+    }
         
     //Timeline for Public allocation
-           weeklyPublic[1] = 1636120800;//=Tue, 21 Sep 2021 00:00:00 GMT
-           weeklyPublic[2] = 1636121100;//=Mon, 20 Dec 2021 00:00:00 GMT
-           weeklyPublic[3] = 1636121400;
+    weeklyPublic[1] = 1636120800;//=Tue, 21 Sep 2021 00:00:00 GMT
+    weeklyPublic[2] = 1636121100;//=Mon, 20 Dec 2021 00:00:00 GMT
+    weeklyPublic[3] = 1636121400;
        //Start publicSale
-           amount = 100000;
-           for(uint i = 1; i < 4; i ++) {
-                 uint256 transferAmount = amount * 30 /100;
-                 amount -= transferAmount;
-                 transferAndLock(publicSaleWallet, transferAmount, weeklyPublic[i]);
-            }
+    amount = 100000;
+    for(uint i = 1; i < 4; i ++) {
+        uint256 transferAmount = amount * 30 /100;
+        amount -= transferAmount;
+        transferAndLock(publicSaleWallet, transferAmount, weeklyPublic[i]);
+    }
     
     // //Timeline for team allocation
     
-        quarterMapTeam[1] = 1636122300;//=Tue, 21 Sep 2021 00:00:00 GMT
-        quarterMapTeam[2] = 1636122600;//=Mon, 20 Dec 2021 00:00:00 GMT
-        amount = 100000;
-         //Start team allocation
-        for(uint i = 1; i <3; i ++) {
+    quarterMapTeam[1] = 1636122300;//=Tue, 21 Sep 2021 00:00:00 GMT
+    quarterMapTeam[2] = 1636122600;//=Mon, 20 Dec 2021 00:00:00 GMT
+    amount = 100000;
+    //Start team allocation
+    for(uint i = 1; i <3; i ++) {
         //Percentage
-            uint256 transferAmount = amount *50/100;
-            amount -= transferAmount;
-            transferAndLock(teamWallet, transferAmount, quarterMapTeam[i]);
-        }
+        uint256 transferAmount = amount *50/100;
+        amount -= transferAmount;
+        transferAndLock(teamWallet, transferAmount, quarterMapTeam[i]);
+    }
         
     //Marketing wallet allocation
-        amount = 100000;
-        transfer(marketingWallet, amount);
+    amount = 100000;
+    transfer(marketingWallet, amount);
     }
 
 	
