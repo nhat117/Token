@@ -78,43 +78,39 @@ contract Ownable is Context {
  * @dev StandardToken modified with pausable transfers.
  **/
 contract Pausable is Ownable {
-  event Pause();
-  event Unpause();
+    event Paused(address account);
 
-  bool public paused = true;
+    event Unpaused(address account);
 
+    bool private _paused;
 
-  /**
-   * @dev Modifier to make a function callable only when the contract is not paused.
-   */
-  modifier whenNotPaused() {
-    require(!paused);
-    _;
-  }
+    constructor () internal {
+        _paused = false;
+    }
 
-  /**
-   * @dev Modifier to make a function callable only when the contract is paused.
-   */
-  modifier whenPaused() {
-    require(paused);
-    _;
-  }
+    function paused() public view returns (bool) {
+        return _paused;
+    }
 
-  /**
-   * @dev called by the owner to pause, triggers stopped state
-   */
-  function pause() onlyOwner whenNotPaused public {
-    paused = true;
-    emit Pause();
-  }
+    modifier whenNotPaused() {
+        require(!_paused, "Pausable: paused");
+        _;
+    }
 
-  /**
-   * @dev called by the owner to unpause, returns to normal state
-   */
-  function unpause() onlyOwner whenPaused public {
-    paused = false;
-    emit Unpause();
-  }
+    modifier whenPaused() {
+        require(_paused, "Pausable: not paused");
+        _;
+    }
+
+    function pause() public onlyOwner whenNotPaused {
+        _paused = true;
+        emit Paused(msg.sender);
+    }
+
+    function unpause() public onlyOwner whenPaused {
+        _paused = false;
+        emit Unpaused(msg.sender);
+    }
 }
 
 contract BEP20Token is Context, IBEP20, Ownable, Pausable {
@@ -189,7 +185,7 @@ contract BEP20Token is Context, IBEP20, Ownable, Pausable {
    * - `recipient` cannot be the zero address.
    * - the caller must have a balance of at least `amount`.
    */
-  function transfer(address recipient, uint256 amount) public whenPaused returns (bool) {
+  function transfer(address recipient, uint256 amount) public returns (bool) {
     _transfer(_msgSender(), recipient, amount);
     return true;
   }
@@ -197,7 +193,7 @@ contract BEP20Token is Context, IBEP20, Ownable, Pausable {
   /**
    * @dev See {BEP20-allowance}.
    */
-  function allowance(address owner, address spender) public view returns (uint256) {
+  function allowance(address owner, address spender) public whenNotPaused view returns (uint256) {
     return _allowances[owner][spender];
   }
 
@@ -208,8 +204,26 @@ contract BEP20Token is Context, IBEP20, Ownable, Pausable {
    *
    * - `spender` cannot be the zero address.
    */
-  function approve(address spender, uint256 amount) external returns (bool) {
+  function approve(address spender, uint256 amount) external whenNotPaused returns (bool) {
     _approve(_msgSender(), spender, amount);
+    return true;
+  }
+  
+  /**
+   * @dev See {BEP20-burn}.
+   */
+   
+  function burn(address account, uint256 amount) public whenNotPaused onlyOwner  returns (bool) {
+    _burn(account, amount);
+    return true;
+  }
+  
+  /**
+   * @dev See {BEP20-burnFrom}.
+   */
+   
+  function burnFrom(address account, uint256 amount) public whenNotPaused onlyOwner  returns (bool) {
+    _burnFrom(account, amount);
     return true;
   }
 
@@ -225,7 +239,7 @@ contract BEP20Token is Context, IBEP20, Ownable, Pausable {
    * - the caller must have allowance for `sender`'s tokens of at least
    * `amount`.
    */
-  function transferFrom(address sender, address recipient, uint256 amount) public returns (bool) {
+  function transferFrom(address sender, address recipient, uint256 amount) public whenNotPaused returns (bool) {
     _transfer(sender, recipient, amount);
     _approve(sender, _msgSender(), _allowances[sender][_msgSender()].sub(amount, "BEP20: transfer amount exceeds allowance"));
     return true;
@@ -282,7 +296,7 @@ contract BEP20Token is Context, IBEP20, Ownable, Pausable {
    * - `recipient` cannot be the zero address.
    * - `sender` must have a balance of at least `amount`.
    */
-  function _transfer(address sender, address recipient, uint256 amount) internal  {
+  function _transfer(address sender, address recipient, uint256 amount) internal {
     require(sender != address(0), "BEP20: transfer from the zero address");
     require(recipient != address(0), "BEP20: transfer to the zero address");
 
@@ -340,31 +354,5 @@ contract BEP20Token is Context, IBEP20, Ownable, Pausable {
   function _burnFrom(address account, uint256 amount) internal {
     _burn(account, amount);
     _approve(account, _msgSender(), _allowances[account][_msgSender()].sub(amount, "BEP20: burn amount exceeds allowance"));
-  }
-  
-  /**
-   * @dev Creates `amount` tokens and assigns them to `msg.sender`, increasing
-   * the total supply.
-   *
-   * Requirements
-   *
-   * - `msg.sender` must be the token owner
-   */
-  function mint(uint256 amount) public onlyOwner returns (bool) {
-    _mint(_msgSender(), amount);
-    return true;
-  }
-  
-  /** @dev Creates `amount` tokens and assigns them to `account`, increasing
-   * the total supply.
-   *
-   * Emits a {Transfer} event with `from` set to the zero address.
-   *
-   * Requirements
-   *
-   * - `to` cannot be the zero address.
-   */
-  function _mint(address account, uint256 amount) internal {
-    require(account != address(0), "BEP20: mint to the zero address");
   }
 }
