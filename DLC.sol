@@ -22,22 +22,20 @@ contract DLCToken is BEP20Token{
     uint constant WEEK = 604800;
     uint constant MONTH = 2629743;
     uint constant YEAR = 31556926;
+    
     uint256 constant DLCSUPPLY = 25000000;
     uint8 constant DECIMALS = 18;
     //Initial participation project
+    
     struct LockItem {
         uint256  releaseDate;
         uint256  amount;
     }
     
-    struct Investor {
-        address _address;
-        uint256 amount;
-    }
-    
     /**
      * @dev add address of fund receiver for the initial fund allocation 
     */
+    
     address private marketingWallet= 0xCA35b7d915458EF540aDe6068dFe2F44E8fa733c;
     address private teamWallet = 0x4B20993Bc481177ec7E8f571ceCaE8A9e22C02db;
     address private publicSaleWallet = 0x6ecaCced313Bc500aBE6E1ec34BE23888a8E777A;
@@ -50,66 +48,43 @@ contract DLCToken is BEP20Token{
     address[] private lockedAddressList; // list of addresses that have some fund currently or previously locked
      
     //Date map
-    uint[] private quarterMapPrivate;
-    uint[] private quarterMapPartner; 
-    uint[] private quarterMapTeam; 
-    uint[] private weeklyPublic;
-    uint[] private weekly;
+    uint[] private quarterPublic;
+    
     uint256 amount;
     uint period;
     uint unit;
     
     constructor() public payable BEP20Token("DLC","DLCTOKEN", DLCSUPPLY, DECIMALS) {
         
-        //Timeline for private sale
-        period = 20; //Number of period
-        unit =  3 * MONTH; // Use together with constant to present a desirable unit
+        //Private sale allocation
         amount = 400000 * (10 ** uint256(DECIMALS));
-        
         BEP20Token.transfer(privateSaleWallet, amount);
         
-        
-        //Timeline for Partner allocation
-        period = 4;
-        unit =  6 * MONTH; // In linux epoch second
+        //Partner allocation
         amount = 2500000 * (10 ** uint256(DECIMALS));
-        
         BEP20Token.transfer(partnerWallet, amount);
         
-        
-     //Timeline for team allocation
-        period = 6;
-        unit =  6 * MONTH;
+        //Team allocation
         amount = 2500000 * (10 ** uint256(DECIMALS));
-        for(uint i = 0; i < period; i ++) {
-            quarterMapTeam.push(block.timestamp + i * unit);
-        }
+        BEP20Token.transfer(teamWallet, amount);
         
-        //Start team allocation
-        for(uint i = 0; i <quarterMapTeam.length; i ++) {
-        //Percentage
-            uint256 transferAmount = amount * 10/100;
-            amount.sub(transferAmount);
-            transferAndLock(teamWallet, transferAmount, quarterMapTeam[i]);
-        }
-            
         //Marketing wallet allocation
         amount = 250000 * (10 ** uint256(DECIMALS));
         BEP20Token.transfer(marketingWallet, amount);
         
         //Timeline for Public allocation
         period = 9;
-        unit =  4* MONTH;
+        unit =  3* MONTH;
         amount = BEP20Token.balanceOf(msg.sender); //Equivalance of 1 710 000 000 DLC
         for(uint i = 0; i < period; i ++) {
-            weeklyPublic.push(block.timestamp + i * unit);
+            quarterPublic.push(block.timestamp + i * unit);
         }
-        //Start publicSale
         
-        for(uint i = 0; i < weeklyPublic.length; i ++) {
+        //Start publicSale
+        for(uint i = 0; i < quarterPublic.length; i ++) {
             uint256 transferAmount = amount * 5 /100;
             amount.sub(transferAmount);
-            transferAndLock(publicSaleWallet, transferAmount, weeklyPublic[i]);
+            transferAndLock(publicSaleWallet, transferAmount,   quarterPublic[i]);
         }
     }
     
