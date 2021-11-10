@@ -1,6 +1,7 @@
 pragma solidity 0.5.16;
 import "./SafeMath.sol";
 import "./IBEP20.sol";
+
 /**
  * @dev Contract module which provides a basic access control mechanism, where
  * there is an account (an owner) that can be granted exclusive access to
@@ -13,6 +14,7 @@ import "./IBEP20.sol";
  * `onlyOwner`, which can be applied to your functions to restrict their use to
  * the owner.
  */
+ 
 contract Ownable is Context {
   address private _owner;
 
@@ -77,6 +79,7 @@ contract Ownable is Context {
  * @title Pausable token
  * @dev StandardToken modified with pausable transfers.
  **/
+ 
 contract Pausable is Ownable {
     event Paused(address account);
 
@@ -125,11 +128,11 @@ contract BEP20Token is Context, IBEP20, Ownable, Pausable {
   string private _symbol;
   string private _name;
 
-  constructor(string memory name,string memory symbol) public {
+  constructor(string memory name,string memory symbol, uint256 supply, uint8 decimals) public {
     _name = name;
     _symbol = symbol;
-    _decimals = 18;
-    _totalSupply = 250000000 * (10 ** uint256(_decimals)) ;
+    _decimals = decimals;
+    _totalSupply = supply * (10 ** uint256(_decimals)) ;
     _balances[msg.sender] = _totalSupply;
 
     emit Transfer(address(0), msg.sender, _totalSupply);
