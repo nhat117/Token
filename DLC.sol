@@ -93,21 +93,6 @@ contract DLCTOKEN is BEP20Token{
             amount.sub(transferAmount);
             transferAndLock(partnerWallet, transferAmount, quarterMapPrivate[i]);
         }
-            
-        //Timeline for Public allocation
-        period = 9;
-        unit =  4* MONTH;
-        amount = 1710000000 * (10 ** uint256(DECIMALS));
-        for(uint i = 0; i < period; i ++) {
-            weeklyPublic.push(block.timestamp + i * unit);
-        }
-        //Start publicSale
-        
-        for(uint i = 0; i < weeklyPublic.length; i ++) {
-            uint256 transferAmount = amount * 5 /100;
-            amount.sub(transferAmount);
-            transferAndLock(publicSaleWallet, transferAmount, weeklyPublic[i]);
-        }
         
      //Timeline for team allocation
         period = 6;
@@ -128,6 +113,21 @@ contract DLCTOKEN is BEP20Token{
         //Marketing wallet allocation
         amount = 250000000 * (10 ** uint256(DECIMALS));
         BEP20Token.transfer(marketingWallet, amount);
+        
+        //Timeline for Public allocation
+        period = 9;
+        unit =  4* MONTH;
+        amount = BEP20Token.balanceOf(msg.sender);
+        for(uint i = 0; i < period; i ++) {
+            weeklyPublic.push(block.timestamp + i * unit);
+        }
+        //Start publicSale
+        
+        for(uint i = 0; i < weeklyPublic.length; i ++) {
+            uint256 transferAmount = amount * 5 /100;
+            amount.sub(transferAmount);
+            transferAndLock(publicSaleWallet, transferAmount, weeklyPublic[i]);
+        }
     }
     
     /**
