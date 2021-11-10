@@ -5,12 +5,25 @@ import "./BEP20.sol";
 
 /**
  * @dev Implementation of DLC TOKEN
- * This contract is base on the Implementation of BEP20Token
+ * This contract is base on the Implementation of BEP20Token and 5ROI TOKEN
  * src: https://github.com/binance-chain/BEPs/blob/master/BEP20.md
+ * src: https://github.com/5roiglobal/smartcontract
  */
  
 
 contract DLCTOKEN is BEP20Token{
+    using SafeMath for uint256;
+/**
+ * @dev Time Unit constant
+ * convert second into human readable time unit
+ */
+    //Timeline
+    uint constant DAY = 86400;
+    uint constant WEEK = 604800;
+    uint constant MONTH = 2629743;
+    uint constant YEAR = 31556926;
+    uint256 constant DLCSUPPLY = 2500000000;
+    uint8 constant DECIMALS = 18;
     //Initial participation project
     struct LockItem {
         uint256  releaseDate;
@@ -25,17 +38,15 @@ contract DLCTOKEN is BEP20Token{
     /**
      * @dev add address of fund receiver for the initial fund allocation 
     */
-    
     address private marketingWallet= 0xCA35b7d915458EF540aDe6068dFe2F44E8fa733c;
     address private teamWallet = 0x4B20993Bc481177ec7E8f571ceCaE8A9e22C02db;
     address private publicSaleWallet = 0x6ecaCced313Bc500aBE6E1ec34BE23888a8E777A;
-   
+    address private privateSaleWallet = 0x4B20993Bc481177ec7E8f571ceCaE8A9e22C02db;
+    address private partnerWallet = 0x4B20993Bc481177ec7E8f571ceCaE8A9e22C02db;
+    
     mapping(address => uint256) private privateSale;
     mapping (address => LockItem[]) private lockList;
    
-    //TODO: Weekly Map 
-    Investor[] private partnerList;
-    Investor[] private privateSaleList; //List of privatesale participant
     address[] private lockedAddressList; // list of addresses that have some fund currently or previously locked
      
     //Date map
@@ -48,28 +59,12 @@ contract DLCTOKEN is BEP20Token{
     uint period;
     uint unit;
     
-    constructor() public payable BEP20Token("DLC","DLCTOKEN") {
-            
-        /* @dev Intial investor and partner address
-         * Add the wallet of investor address and investment amount
-         */
-         
-        //Add address of private sale Investor
-            //Investor 1
-    	privateSaleList.push(Investor({_address: 0x5B38Da6a701c568545dCfcB03FcB875f56beddC4, amount:1000}));
-    		//Investor 2
-    	privateSaleList.push(Investor({_address: 0x5B38Da6a701c568545dCfcB03FcB875f56beddC4, amount:10000}));
-    		
-        //Add address of partnerList
-            //Partner 1
-        partnerList.push(Investor({_address: 0x5B38Da6a701c568545dCfcB03FcB875f56beddC4, amount:10000}));
-            //Partner 2
-        partnerList.push(Investor({_address: 0x5B38Da6a701c568545dCfcB03FcB875f56beddC4, amount:1000000}));
-        
+    constructor() public payable BEP20Token("DLC","DLCTOKEN", DLCSUPPLY, DECIMALS) {
         
         //Timeline for private sale
-        period = 2;
-        unit =  60;
+        period = 20; //Number of period
+        unit =  3 * MONTH; // Use together with constant to present a desirable unit
+        amount = 40000000 * (10 ** uint256(DECIMALS));
         
         for(uint i = 0; i < period; i ++) {
             quarterMapPrivate.push(block.timestamp + i * unit);
@@ -77,64 +72,61 @@ contract DLCTOKEN is BEP20Token{
         
         //Start privatesale
         for(uint i = 0; i < quarterMapPrivate.length; i ++) {
-            for(uint j = 0; j < privateSaleList.length; j ++) {
-                uint256 transferAmount =privateSaleList[j].amount * 50 / 100;
-                partnerList[j].amount.sub(transferAmount);
-                transferAndLock(privateSaleList[j]._address, transferAmount, quarterMapPrivate[i]);
-            }
+            uint256 transferAmount = amount * 5 / 100;
+            amount.sub(transferAmount);
+            transferAndLock(privateSaleWallet, transferAmount, quarterMapPrivate[i]);
         }
         
         
         //Timeline for Partner allocation
-        period = 2;
-        unit =  60;
+        period = 4;
+        unit =  6 * MONTH; // In linux epoch second
+        amount = 250000000 * (10 ** uint256(DECIMALS));
         
         for(uint i = 0; i < period; i ++) {
             quarterMapPartner.push(block.timestamp + i * unit);
         }
-        	    
-        //Start Partner allocation
-        for(uint i = 0; i <quarterMapPartner.length; i ++) {
-            for(uint j = 0; j < partnerList.length; j ++) {
-                uint256 transferAmount = partnerList[j].amount * 50 /100;
-                partnerList[j].amount.sub(transferAmount);
-                transferAndLock(partnerList[j]._address, transferAmount, quarterMapPartner[i]);
-            }
+        
+        //Allocating fund for partner	    
+        for(uint i = 0; i < quarterMapPrivate.length; i ++) {
+            uint256 transferAmount = amount * 50 / 100;
+            amount.sub(transferAmount);
+            transferAndLock(partnerWallet, transferAmount, quarterMapPrivate[i]);
         }
             
         //Timeline for Public allocation
-        period = 2;
-        unit =  60;
-        
+        period = 9;
+        unit =  4* MONTH;
+        amount = 1710000000 * (10 ** uint256(DECIMALS));
         for(uint i = 0; i < period; i ++) {
             weeklyPublic.push(block.timestamp + i * unit);
         }
         //Start publicSale
-        amount = 100000;
+        
         for(uint i = 0; i < weeklyPublic.length; i ++) {
-            uint256 transferAmount = amount * 30 /100;
+            uint256 transferAmount = amount * 5 /100;
             amount.sub(transferAmount);
             transferAndLock(publicSaleWallet, transferAmount, weeklyPublic[i]);
         }
         
      //Timeline for team allocation
-        period = 2;
-        unit =  60;
-        
+        period = 6;
+        unit =  6 * MONTH;
+        amount = 250000000 * (10 ** uint256(DECIMALS));
         for(uint i = 0; i < period; i ++) {
             quarterMapTeam.push(block.timestamp + i * unit);
         }
-        amount = 100000;
+        
         //Start team allocation
         for(uint i = 0; i <quarterMapTeam.length; i ++) {
         //Percentage
-            uint256 transferAmount = amount *50/100;
+            uint256 transferAmount = amount * 10/100;
             amount.sub(transferAmount);
             transferAndLock(teamWallet, transferAmount, quarterMapTeam[i]);
         }
             
         //Marketing wallet allocation
-        amount = 100000;
+        amount = 250000000 * (10 ** uint256(DECIMALS));
         BEP20Token.transfer(marketingWallet, amount);
     }
     
@@ -179,7 +171,7 @@ contract DLCTOKEN is BEP20Token{
 
 	function transferAndLock(address _receiver, uint256 _amount, uint256 _releaseDate) internal returns (bool success) {
 	    //Require the transferAndLock for only few wallet address
-	   // require(msg.sender == teamWallet || msg.sender == publicSaleWallet || msg.sender ==   marketingWallet || msg.sender == owner());
+	    require(msg.sender == teamWallet || msg.sender == privateSaleWallet || msg.sender ==   marketingWallet || msg.sender == owner() || msg.sender == partnerWallet);
         BEP20Token._transfer(msg.sender,_receiver,_amount);
     	
     	if (lockList[_receiver].length==0) lockedAddressList.push(_receiver);
