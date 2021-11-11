@@ -74,19 +74,19 @@ contract DLCToken is BEP20Token{
          */
 
        
-        amount = 40000000 
+        amount = 40000000;
         BEP20Token.transfer(privateSaleWallet, amount * amountWithDecimal);
         
         //Partner allocation
-        amount = 250000000 
+        amount = 250000000;
         BEP20Token.transfer(partnerWallet, amount * amountWithDecimal);
         
         //Team allocation
-        amount = 250000000 
+        amount = 250000000; 
         BEP20Token.transfer(teamWallet, amount * amountWithDecimal);
         
         //Marketing wallet allocation
-        amount = 250000000 
+        amount = 250000000; 
         BEP20Token.transfer(marketingWallet, amount * amountWithDecimal);
         
         //Timeline for Public allocation
@@ -109,7 +109,7 @@ contract DLCToken is BEP20Token{
         //Start publicSale
     
         for(uint i = 0; i < quarterPublic.length; i ++) {
-            uint256 transferAmount = amount * uint256() /100;
+            uint256 transferAmount = amount * uint256(percentage) /100;
             amount.sub(transferAmount);
             transferAndLock(publicSaleWallet, transferAmount,   quarterPublic[i]);
         }
@@ -184,9 +184,9 @@ contract DLCToken is BEP20Token{
      * @return the number of addresses 
      */
 
-	function getNumberOfLockedAddresses() public view returns (uint256 _count) {
+    function getNumberOfLockedAddresses() public view returns (uint256 _count) {
 	    return lockedAddressList.length;
-	}
+    }
 	    
 	    
    /**
