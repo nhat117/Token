@@ -168,8 +168,8 @@ contract DLCToken is BEP20Token{
    
     // Dapp Functionality
 
-	/**
-     * @dev qurry the list of address that have at least a fund locked currently or in the past
+   /**
+     * @dev querry the list of address that have at least a fund locked currently or in the past
      * @return the list of all addresses 
      */
 
@@ -177,7 +177,7 @@ contract DLCToken is BEP20Token{
 	    return lockedAddressList;
 	}
 	
-	/**
+   /**
      * @dev count the number of account that have at least a fund locked currently or in the past
      * @return the number of addresses 
      */
@@ -187,7 +187,7 @@ contract DLCToken is BEP20Token{
 	}
 	    
 	    
-	/**
+   /**
      * @dev check the number address that have at least a fund locked currently
      * @return the number of addresses 
      */
@@ -200,7 +200,7 @@ contract DLCToken is BEP20Token{
 	    return count;
 	}
 	    
-	/**
+   /**
      * @dev check the list of address that have at least a fund locked currently
      * @return the list of all addresses 
      */
@@ -218,7 +218,7 @@ contract DLCToken is BEP20Token{
         return list;
     }
 
-    /**
+   /**
      * @dev check locked funds of a given address.
      * @return the total amount of locked fund in an address
      * @param lockedAddress The address to check.
@@ -235,7 +235,7 @@ contract DLCToken is BEP20Token{
         return lockedAmount;
     }
     
-    /**
+   /**
      * @dev  check the total of locked funds at the current time
      * @return the total amount of locked fund
      */
@@ -249,7 +249,7 @@ contract DLCToken is BEP20Token{
         return sum;
     }
     
-    /**
+   /**
      * @dev check of locked funds of a given address.
      * @return the total amount 
      * @param lockedAddress The address to check.
@@ -261,7 +261,7 @@ contract DLCToken is BEP20Token{
         return bal.sub(locked);
     }
     
-    /**
+   /**
      * @dev  check amount circulating coins that are not locked at the current time
      * @return the total amount
      */
