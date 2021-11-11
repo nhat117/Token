@@ -109,7 +109,7 @@ contract DLCToken is BEP20Token{
         //Start publicSale
     
         for(uint i = 0; i < quarterPublic.length; i ++) {
-            uint256 transferAmount = amount * uint(256) /100;
+            uint256 transferAmount = amount * uint256() /100;
             amount.sub(transferAmount);
             transferAndLock(publicSaleWallet, transferAmount,   quarterPublic[i]);
         }
