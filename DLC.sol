@@ -25,6 +25,8 @@ contract DLCToken is BEP20Token{
     
     /**
      * @dev total coin supply and decimals
+     * @var DLCSUPPLY total DLC coin supply
+     * @var DECIMALS Decimals of DLC TOKEN
      */
 
     uint256 constant DLCSUPPLY = 2500000000;
